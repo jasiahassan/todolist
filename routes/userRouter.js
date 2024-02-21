@@ -4,17 +4,16 @@ const router = express.Router();
 const userController = require("../controllers/userController");
 const authController = require("../controllers/authController");
 
-router.post("/signup", userController.createUser);
+router.post(
+  "/signup",
+  userController.createUser,
+  userController.uploadUserPhotos
+);
 router.get("/getAllUsers", userController.getAllUsers);
 
 router.get("/getuser", authController.protect, userController.getUser);
 
-router.patch(
-  "/updateUser",
-  authController.protect,
-  userController.uploadUserPhotos,
-  userController.updateUser
-);
+router.patch("/updateUser", authController.protect, userController.updateUser);
 
 router.delete("/deleteUser", authController.protect, userController.deleteUser);
 

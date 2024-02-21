@@ -50,8 +50,10 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
 });
 
 exports.createUser = catchAsync(async (req, res, next) => {
+  console.log(req.body);
   const newUser = await User.create(req.body);
-
+  if (req.file) req.body.photo = req.file.path;
+  console.log(req.file);
   const token = signToken(newUser._id);
   const cookieOptions = {
     expires: new Date(
@@ -94,7 +96,6 @@ exports.updateUser = catchAsync(async (req, res, next) => {
     );
   }
   const filteredbody = filterObj(req.body, "name", "email", "address");
-  if (req.file) filteredbody.photo = req.file.filename;
   const user = await User.findByIdAndUpdate(req.user.id, filteredbody, {
     new: true,
     runValidators: true,

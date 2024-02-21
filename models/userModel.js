@@ -47,7 +47,6 @@ const usersSchema = new mongoose.Schema({
       validator: function (el) {
         return el === this.password;
       },
-
       message: "password are not same",
     },
   },

@@ -10,6 +10,17 @@ const taskSchema = new mongoose.Schema({
   description: {
     type: String,
   },
+  category: {
+    type: String,
+    enum: ["office", "home", "other"],
+  },
+  priority: {
+    type: String,
+    enum: ["low", "medium", "high"],
+  },
+  dueDate: {
+    type: Date,
+  },
 });
 const Task = mongoose.model("Task", taskSchema);
 module.exports = Task;
