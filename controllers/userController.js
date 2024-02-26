@@ -4,32 +4,6 @@ const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const { signToken } = require("./authController");
 const sendEmail = require("../utils/email");
-const multer = require("multer");
-
-const multerStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "public/users");
-  },
-  filename: (req, file, cb) => {
-    const ext = file.mimetype.split("/")[1];
-    cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
-  },
-});
-
-const multerFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image")) {
-    cb(null, true);
-  } else {
-    cb(new AppError("not an image!please upload only images", 400), false);
-  }
-};
-
-const upload = multer({
-  storage: multerStorage,
-  fileFilter: multerFilter,
-});
-
-exports.uploadUserPhotos = upload.single("photo");
 
 const filterObj = (obj, ...allowedfields) => {
   const newObj = {};
@@ -50,10 +24,10 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
 });
 
 exports.createUser = catchAsync(async (req, res, next) => {
-  console.log(req.body);
-  const newUser = await User.create(req.body);
-  if (req.file) req.body.photo = req.file.path;
-  console.log(req.file);
+  const newUser = await User.create({
+    ...req.body,
+    photo: req.file.path,
+  });
   const token = signToken(newUser._id);
   const cookieOptions = {
     expires: new Date(
@@ -96,10 +70,19 @@ exports.updateUser = catchAsync(async (req, res, next) => {
     );
   }
   const filteredbody = filterObj(req.body, "name", "email", "address");
-  const user = await User.findByIdAndUpdate(req.user.id, filteredbody, {
-    new: true,
-    runValidators: true,
-  });
+  let user;
+  if (req.user.role === "user") {
+    user = await User.findByIdAndUpdate(req.user.id, filteredbody, {
+      new: true,
+      runValidators: true,
+    });
+  }
+  if (req.user.role === "admin") {
+    user = await User.findByIdAndUpdate(req.params.id, filteredbody, {
+      new: true,
+      runValidators: true,
+    });
+  }
 
   res.status(200).json({
     status: "success",
@@ -110,7 +93,12 @@ exports.updateUser = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteUser = catchAsync(async (req, res, next) => {
-  await User.findByIdAndUpdate(req.user.id, { active: false });
+  if (req.user.role === "user") {
+    await User.findByIdAndUpdate(req.user.id, { active: false });
+  }
+  if (req.user.role === "admin") {
+    await User.findByIdAndDelete(req.params.id);
+  }
   res.status(204).json({
     status: "success",
     data: null,

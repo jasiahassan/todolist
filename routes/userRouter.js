@@ -3,19 +3,32 @@ const router = express.Router();
 
 const userController = require("../controllers/userController");
 const authController = require("../controllers/authController");
+const uploadUsingMulter = require("../utils/uploadUsingMulter");
 
 router.post(
   "/signup",
-  userController.createUser,
-  userController.uploadUserPhotos
+  uploadUsingMulter.uploadUserPhotos,
+  userController.createUser
 );
 router.get("/getAllUsers", userController.getAllUsers);
 
 router.get("/getuser", authController.protect, userController.getUser);
 
 router.patch("/updateUser", authController.protect, userController.updateUser);
+router.patch(
+  "/updateUser/:id",
+  authController.protect,
+  authController.restrictTo("admin"),
+  userController.updateUser
+);
 
 router.delete("/deleteUser", authController.protect, userController.deleteUser);
+router.delete(
+  "/deleteUser/:id",
+  authController.protect,
+  authController.restrictTo("admin"),
+  userController.deleteUser
+);
 
 router.post("/login", userController.loginUser);
 

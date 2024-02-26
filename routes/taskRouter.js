@@ -6,6 +6,11 @@ const authController = require("../controllers/authController");
 router
   .route("/")
   .get(authController.protect, taskController.getTasks)
+  .get(
+    authController.protect,
+    authController.restrictTo("admin"),
+    taskController.getTasks
+  )
   .post(authController.protect, taskController.createTask);
 router
   .route("/:id")
